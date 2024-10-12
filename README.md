@@ -319,9 +319,172 @@ class Solution {
 
 与方法4不同的是，该方法是直接更改节点的指向，最后返回的是原链表的尾节点
 
+
+
+### 3.2 删除倒数第n个节点
+
+#### 1
+
+```C++
+class Solution {
+public:
+    ListNode* removeNthFromEnd(ListNode* head, int n) {
+        ListNode* s = new ListNode(0, head);
+        ListNode* slowNode = s;
+        ListNode* fastNode = s;
+
+        for (int i = 0; i < n; i++) {
+            fastNode = fastNode->next;
+        }
+        while (fastNode->next != nullptr) {
+            slowNode = slowNode->next;
+            fastNode = fastNode->next;
+        }
+        slowNode->next = slowNode->next->next;
+        return s->next;
+    }
+};
+```
+
+快慢指针，先让快指针与慢指针的差距变为n，随后快指针的下一个节点遍历到null，此时慢指针就是倒数n的位置
+
+#### 2
+
+```C++
+class Solution {
+public:
+    ListNode* removeNthFromEnd(ListNode* head, int n) {
+        ListNode* s=new ListNode(0,head);
+        recursion(s, n);
+        return s->next;
+    }
+
+    int recursion(ListNode* p, int n) {
+        if (p == nullptr) {
+            return 0;
+        }
+
+        int nth = recursion(p->next, n);
+        if (nth == n) {
+            p->next = p->next->next;
+        }
+        return nth + 1;
+    }
+};
+```
+
+递归，在当p指向为空时，返回0。
+
+当nth的值与n的值相等时，代表要删除的节点找到，此时p所指向的为要删除节点的前一个节点，删除下一个节点
+
+Q：p.next.next 不怕空指针吗？
+
+A：
+
+- p 是待删除节点的上一个节点，如果能递归回到 p，那么 p.next 肯定有值，不会是 null
+- 且题目说明了 n >=1，不会因为 nth == 0 而让 p.next 指向最后的 null
+
+### 3.3 删除排序链表中的重复元素（只留下不重复的元素）
+
+#### 1
+
+```C++
+class Solution {
+public:
+    ListNode* deleteDuplicates(ListNode* head) {
+
+        if (head == nullptr || head->next == nullptr) {
+            return head;
+        }
+        if (head->val == head->next->val) {
+            ListNode* x = head->next->next;
+            while (x != nullptr && x->val == head->val) {
+                x = x->next;
+            }
+            return deleteDuplicates(x);
+        }
+
+        head->next = deleteDuplicates(head->next);
+        return head;
+    }
+};
+```
+
+### 3.4 合并多个有序链表
+
+#### 1
+
+```C++
+class Solution {
+public:
+    ListNode* mergeKLists(vector<ListNode*>& lists) {
+        return merge(lists, 0, lists.size()-1);
+    }
+
+    ListNode* merge(vector<ListNode*>& lists, int l, int r) {
+        if (l == r) {
+            return lists[l];
+        } else if (l > r) {
+            return nullptr;
+        }
+        int m = l + ((r - l) >> 1);
+        return mergeTwoLists(merge(lists, l, m), merge(lists, m + 1, r));
+    }
+
+    ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {
+        if (!list1 || !list2) {
+            return list1 ? list1 : list2;
+        }
+        ListNode* head = new ListNode(-1);
+        ListNode* tail = head;
+        while (list1 && list2) {
+            if (list1->val >= list2->val) {
+                tail->next = list2;
+                list2 = list2->next;
+            } else {
+                tail->next = list1;
+                list1 = list1->next;
+            }
+            tail = tail->next;
+        }
+        tail->next = list1 ? list1 : list2;
+
+        return head->next;
+    }
+};
+```
+
+分治法
+
 ## 四、数组
 
+### 4.1 合并有序数组
 
+#### 1
+
+```C++
+class Solution {
+public:
+    void merge(vector<int>& nums1, int m, vector<int>& nums2, int n) {
+        int len = m + n - 1;
+        for (int i = len; i >= 0; i--) {
+            if (m == 0) {
+                for (int j = 0; j < n; j++) {
+                    nums1[j] = nums2[j];
+                }
+                break;
+            }
+            if (n == 0) {
+                break;
+            }
+            nums1[i] =
+                nums1[m - 1] < nums2[n - 1] ? nums2[n-- - 1] : nums1[m-- - 1];
+        }
+    }
+};
+```
+
+反向输入
 
 ## 五、队列
 
