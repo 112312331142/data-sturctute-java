@@ -456,6 +456,109 @@ public:
 
 分治法
 
+#### 2
+
+小根堆 
+
+```C++
+class MinHeap {
+public:
+    vector<ListNode *> v;
+    int size = 0;
+
+    explicit MinHeap(int capacity) {
+        v.resize(capacity);
+    }
+
+    bool empty() const {
+        return size == 0;
+    }
+
+    bool full() const {
+        return size == v.capacity();
+    }
+
+    bool put(ListNode *node) {
+        if (full()) {
+            return false;
+        }
+        int child = size++;
+        int parent = (child - 1) / 2;
+        while (child > 0 && v[parent]->val > node->val) {
+            v[child] = v[parent];
+            child = parent;
+            parent = (child - 1) / 2;
+        }
+        v[child] = node;
+        return true;
+    }
+
+    ListNode *pop() {
+        if (empty()) {
+            return nullptr;
+        }
+        swapNum(0, size - 1);
+        size--;
+        ListNode *removed = v[size];
+        v[size] = nullptr;
+
+        down(0);
+
+        return removed;
+    }
+
+    void down(int parent) {
+        int left = parent * 2 + 1;
+        int right = left + 1;
+        int min = parent;
+
+        if (left < size && v[left]->val < v[min]->val) {
+            min = left;
+        }
+        if (right < size && v[right]->val < v[min]->val) {
+            min = right;
+        }
+        if (min != parent) {
+            swapNum(parent, min);
+            down(min);
+        }
+
+    }
+    void swapNum(int i, int j) {
+        ListNode *temp = v[i];
+        v[i] = v[j];
+        v[j] = temp;
+    }
+};
+
+class Solution {
+public:
+    static ListNode *mergeKLists(vector<ListNode *> &lists) {
+        auto *heap = new MinHeap((int) lists.size());
+        for (ListNode *list: lists) {
+            if (list != nullptr) {
+                heap->put(list);
+            }
+        }
+        auto *head = new ListNode(-1, nullptr);
+        ListNode *tail = head;
+        while (!heap->empty()) {
+            ListNode *pNode = heap->pop();
+            tail->next = pNode;
+            tail = pNode;
+            if (pNode->next != nullptr) {
+                heap->put(pNode->next);
+            }
+        }
+        return head->next;
+    }
+};
+```
+
+
+
+
+
 ## 四、数组
 
 ### 4.1 合并有序数组
@@ -486,11 +589,268 @@ public:
 
 反向输入
 
+### 4.2 找到数组中第k大的元素
+
+[215. 数组中的第K个最大元素 - 力扣（LeetCode）](https://leetcode.cn/problems/kth-largest-element-in-an-array/)
+
+#### 1
+
+
+
+
+
+
+
+
+
 ## 五、队列
+
+### 5.1 二叉树层次遍历
+
+#### 1
+
+```cpp
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left),
+ * right(right) {}
+ * };
+ */
+class Solution {
+public:
+    vector<vector<int>> levelOrder(TreeNode* root) {
+        if (root == nullptr) {
+            vector<vector<int>> v;
+            return v;
+        }
+        vector<vector<int>> vs;
+        queue<TreeNode*> q;
+        q.push(root);
+
+        while (!q.empty()) {
+            int count = q.size();
+            vector<int> v;
+            while (count > 0) {
+                TreeNode* node = q.front();
+                q.pop();
+                v.push_back(node->val);
+                if (node->left != nullptr) {
+                    q.push(node->left);
+                }
+                if (node->right != nullptr) {
+                    q.push(node->right);
+                }
+                count--;
+            }
+            vs.push_back(v);
+        }
+        return vs;
+    }
+};
+```
 
 
 
 ## 六、栈
+
+### 6.1 有效的括号
+
+给定一个只包括 `'('`，`')'`，`'{'`，`'}'`，`'['`，`']'` 的字符串 `s` ，判断字符串是否有效。
+
+有效字符串需满足：
+
+1. 左括号必须用相同类型的右括号闭合。
+2. 左括号必须以正确的顺序闭合。
+3. 每个右括号都有一个对应的相同类型的左括号
+
+#### 1
+
+```cpp
+class Solution {
+public:
+    bool isValid(string s) {
+        stack<char> sk;
+        for (int i = 0; i < s.size(); i++) {
+            if (s[i] == '(' || s[i] == '[' || s[i] == '{') {
+                sk.push(s[i]);
+            }
+            if (s[i] == ')') {
+                if (sk.empty() || sk.top() != '(') {
+                    return false;
+                } else {
+                    sk.pop();
+                }
+            }
+            if (s[i] == '}') {
+                if (sk.empty() || sk.top() != '{') {
+                    return false;
+                } else {
+                    sk.pop();
+                }
+            }
+            if (s[i] == ']') {
+                if (sk.empty() || sk.top() != '[') {
+                    return false;
+                } else {
+                    sk.pop();
+                }
+            }
+        }
+        return sk.empty() ? true : false;
+    }
+};
+```
+
+### 6.2 逆波兰表达式求值
+
+#### 1
+
+```C++
+class Solution {
+public:
+    int evalRPN(vector<string>& tokens) {
+        stack<int> s;
+        for (int i = 0; i < tokens.size(); i++) {
+            if (tokens[i] == "+") {
+                int num1 = s.top();
+                s.pop();
+                int num2 = s.top();
+                s.pop();
+                s.push(num1 + num2);
+            } else if (tokens[i] == "*") {
+                int num1 = s.top();
+                s.pop();
+                int num2 = s.top();
+                s.pop();
+                s.push(num1 * num2);
+            } else if (tokens[i] == "-") {
+                int num1 = s.top();
+                s.pop();
+                int num2 = s.top();
+                s.pop();
+                s.push(num2 - num1);
+            } else if (tokens[i] == "/") {
+                int num1 = s.top();
+                if (num1 == 0) {
+                    return 0;
+                }
+                s.pop();
+                int num2 = s.top();
+                s.pop();
+                s.push(num2 / num1);
+            } else {
+                int num = stoi(tokens[i]);//将字符串转换为数字型
+                s.push(num);
+            }
+        }
+        return s.top();
+    }
+};
+```
+
+### 6.3 中缀表达式转后缀表达式
+
+```C++
+//
+// Created by Administrator on 2024/10/13.
+//
+#include "iostream"
+#include "stack"
+
+using namespace std;
+
+/*
+    思路
+    1. 遇到数字, 拼串
+    2. 遇到 + - * /
+    - 优先级高于栈顶运算符 入栈
+    - 否则将栈中高级或平级运算符出栈拼串, 本运算符入栈
+    3. 遍历完成, 栈中剩余运算符出栈拼串
+    - 先出栈,意味着优先运算
+    4. 带 ()
+    - 左括号直接入栈,左括号优先级设为0
+    - 右括号要将栈中直至左括号为止的运算符出栈拼串
+*/
+
+int priority(char c) {
+    switch (c) {
+        case '*':
+        case '/':
+            return 2;
+        case '+':
+        case '-':
+            return 1;
+        case '(':
+            return 0;
+        default:
+            return -1;
+    }
+}
+
+string infixToSuffix(string &infix) {
+    stack<char> stk;
+    string suffix;
+    for (char c: infix) {
+        switch (c) {
+            case '*':
+            case '+':
+            case '/':
+            case '-':
+                if (stk.empty()) {
+                    stk.push(c);
+                } else {
+                    if (priority(c) > priority(stk.top())) {
+                        stk.push(c);
+                    } else {
+                        while (!stk.empty() && priority(stk.top()) >= priority(c)) {
+                            cout << stk.top();
+                            suffix.push_back(stk.top());//将符号添加到字符串上
+                            stk.pop();
+                        }
+                        stk.push(c);
+                    }
+                }
+                break;
+            case '(':
+                stk.push(c);
+                break;
+            case ')': {
+                while (stk.top() != '(') {
+                    cout << stk.top();
+                    suffix.push_back((stk.top()));
+                    stk.pop();
+                }
+                stk.pop();
+            }
+                break;
+            default: {
+                cout << c;
+                suffix.push_back(c);
+            }
+        }
+    }
+    while (!stk.empty()) {
+        cout << stk.top();
+        suffix.push_back(stk.top());
+        stk.pop();
+    }
+    return suffix;
+}
+
+int main() {
+//    string infix = "(a+b*c-d)*e";
+    string infix1="(a-b)/(c+d)";
+    const string &suffix = infixToSuffix(infix1);
+    cout << endl;
+    cout << suffix << endl;
+}
+```
 
 
 
@@ -503,6 +863,45 @@ public:
 
 
 ## 九、字符串
+
+### 9.1 二进制求和
+
+给你两个二进制字符串 `a` 和 `b` ，以二进制字符串的形式返回它们的和。
+
+#### 1
+
+```c++
+class Solution {
+public:
+    string addBinary(string a, string b) {
+        int i1 = a.size() - 1, i2 = b.size() - 1;
+        int carry = 0;//妙
+        //用carry/2来表示上一位是否有进位，只有当carry>2(carry为2或者3时，才会进位)
+        string ans;
+        while (i1 >= 0 && i2 >= 0) {
+            int sum = carry;//sum表示这一位相加后的数值
+            sum += (a.at(i1--) - '0') + (b.at(i2--) - '0');//相加求和
+            carry = sum / 2;//进位
+            ans += ('0' + sum % 2);//'0'+1来将int类型的数字转换为字符串类型
+        }
+        while (i1 >= 0) {//i1与i2长度不相等时，会有一个有剩余
+            int sum = carry + a.at(i1--) - '0';
+            carry = sum / 2;
+            ans += ('0' + sum % 2);
+        }
+        while (i2 >= 0) {
+            int sum = carry + b.at(i2--) - '0';
+            carry = sum / 2;
+            ans += ('0' + sum % 2);
+        }
+        if (carry == 1) {
+            ans += '1';//最后如果还有进位，字符串要在加一
+        }
+        reverse(ans.begin(), ans.end());
+        return ans;
+    }
+};
+```
 
 
 
