@@ -1481,6 +1481,118 @@ public:
 };
 ```
 
+### 7.8 删除二叉搜索树中的节点
+
+#### 1
+
+```cpp
+class Solution {
+public:
+    TreeNode* deleteNode(TreeNode* root, int key) {
+        if (root == nullptr) {
+            return nullptr;
+        }
+        TreeNode* dummy = new TreeNode(-1, root, nullptr);
+        TreeNode* curr = dummy->left;
+        TreeNode* parent = dummy;
+        while (curr != nullptr) {
+            if (key < curr->val) {
+                parent = curr;
+                curr = curr->left;
+            } else if (key > curr->val) {
+                parent = curr;
+                curr = curr->right;
+            } else {
+                break;
+            }
+        }
+        if (curr == nullptr) {
+            return root;
+        }
+        if (curr->right == nullptr && curr->left == nullptr) {
+            root = nullptr;
+        }
+        if (curr->right == nullptr) {
+            shift(parent, curr, curr->left);
+        } else if (curr->left == nullptr) {
+            shift(parent, curr, curr->right);
+        } else {
+            TreeNode* s = curr->right;
+            TreeNode* sParent = curr;
+            while (s->left != nullptr) {
+                sParent = s;
+                s = s->left;
+            }
+            if (sParent != curr) {
+                shift(sParent, s, s->right); // s为要移除的节点
+                s->right = curr->right;
+            }
+            shift(parent, curr, s);
+            s->left = curr->left;
+        }
+        
+        return dummy->left;
+    }
+
+    void shift(TreeNode* parent, TreeNode* curr, TreeNode* child) {
+        if (parent->right == curr) {
+            parent->right = child;
+        } else if (parent->left == curr) {
+            parent->left = child;
+        }
+    }
+};
+```
+
+#### 2
+
+```cpp
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left),
+ * right(right) {}
+ * };
+ */
+class Solution {
+public:
+    TreeNode* deleteNode(TreeNode* root, int key) {
+        if (root == nullptr) {
+            return nullptr;
+        }
+        if (key < root->val) {
+            root->left = deleteNode(root->left, key);
+            return root;
+        }
+        if (key > root->val) {
+            root->right = deleteNode(root->right, key);
+            return root;
+        }
+        if (root->left == nullptr) {
+            return root->right;
+        }
+        if (root->right == nullptr) {
+            return root->left;
+        }
+        TreeNode* s = root->right;
+        while (s->left != nullptr) {
+            s = s->left;
+        }
+        s->right = deleteNode(root->right, s->val);
+        s->left = root->left;
+
+        return s;
+    }
+};
+```
+
+
+
 
 
 ## 八、图
