@@ -1547,18 +1547,6 @@ public:
 #### 2
 
 ```cpp
-/**
- * Definition for a binary tree node.
- * struct TreeNode {
- *     int val;
- *     TreeNode *left;
- *     TreeNode *right;
- *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
- *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
- *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left),
- * right(right) {}
- * };
- */
 class Solution {
 public:
     TreeNode* deleteNode(TreeNode* root, int key) {
@@ -1591,11 +1579,260 @@ public:
 };
 ```
 
+### 7.9 验证二叉搜索树
+
+#### 1 非递归中序遍历
+
+```cpp
+class Solution {
+public:
+    bool isValidBST(TreeNode* root) {
+        stack<TreeNode*> stk;
+        TreeNode* prev = nullptr;
+        while (root != nullptr || !stk.empty()) {
+            if (root != nullptr) {
+                stk.push(root);
+                root = root->left;
+            } else {
+                TreeNode* curr = stk.top();
+                stk.pop();
+                if (prev != nullptr && curr->val <= prev->val) {
+                    return false;
+                }
+                root = curr->right;
+                prev = curr;
+            }
+        }
+        return true;
+    }
+};
+```
+
+#### 2 递归中序遍历
+
+```cpp
+class Solution {
+public:
+    long prev = LONG_MIN;
+    bool isValidBST(TreeNode* root) {
+        if (root == nullptr) {
+            return true;
+        }
+        bool a = isValidBST(root->left);
+        if(!a){
+            return false;
+        }
+        if (prev >= root->val) {
+            return false;
+        }
+        prev = root->val;
+        bool b = isValidBST(root->right);
+        return a && b;
+    }
+};
+```
+
+#### 3 
+
+```cpp
+class Solution {
+public:
+    // 上下限递归实现
+    bool isValidBST(TreeNode* root) {
+        return doValid(root, LONG_MIN, LONG_MAX);
+    }
+
+    bool doValid(TreeNode* node, long min, long max) {
+        if (node == nullptr) {
+            return true;
+        }
+        if (node->val <= min || node->val >= max) {
+            return false;
+        }
+        return doValid(node->left, min, node->val) &&
+               doValid(node->right, node->val, max);
+    }
+};
+```
+
+### 7.10 根据前序遍历构造二叉搜索树
+
+#### 1
+
+```cpp
+class Solution {
+public:
+    TreeNode* bstFromPreorder(vector<int>& preorder) {
+        TreeNode* root = new TreeNode(preorder[0]);
+        TreeNode* curr = root;
+        for (int i = 1; i < preorder.size(); i++) {
+            int val = preorder[i];
+            insert(root, val);
+        }
+        return root;
+    }
+
+private:
+    TreeNode* insert(TreeNode* node, int val) {
+        if (node == nullptr) {
+            return new TreeNode(val);
+        }
+        if (val < node->val) {
+            node->left = insert(node->left,val);
+        }else{
+            node->right = insert(node->right,val);
+        }
+        return node;
+    }
+};
+```
+
+#### 2
+
+```cpp
+class Solution {
+public:
+    TreeNode* bstFromPreorder(vector<int>& preorder) {
+        /*
+        1.遍历数组中的每个值，根据值创建节点
+            - 每个节点若成功创建都有，左孩子上限，右孩子上限
+        2.处理下一个值时，如果超过此上限，那么：
+            - 将null作为上个节点的孩子
+            - 不能创建节点对象
+            - 直到不超过上限为止
+        3.重复1，2两步
+        */
+        return insert(preorder,INT_MAX);
+    }
+
+private:
+    int i = 0;
+    TreeNode* insert(vector<int>& preorder, int max) {
+        if (i == preorder.size()) {
+            return nullptr;
+        }
+        int value = preorder[i];
+        if (value > max) {
+            return nullptr;
+        }
+        TreeNode* node = new TreeNode(preorder[i]);
+        i++;
+        node->left = insert(preorder, value);
+        node->right = insert(preorder, max);
+        return node;
+    }
+};
+```
+
 
 
 
 
 ## 八、图
+
+### 8.1 连接所有点的最小费用
+
+#### 1 krustal，并查集
+
+设置Edge存储每一条边，
+
+记录Djset存储每个节点
+
+```java
+class Djset {
+public:
+    vector<int> parent; // 记录节点的根
+    vector<int> rank;   // 记录根节点的深度（用于优化）
+    vector<int> size;   // 记录每个连通分量的节点个数
+    vector<int> len;    // 记录每个联通分量里的所有边长度
+    int num;            // 记录节点个数
+
+    // 初始化并查集，节点的个数为n，parent[i] = i
+    Djset(int n) : parent(n), rank(n), len(n, 0), size(n, 1), num(n) {
+        for (int i = 0; i < n; i++) {
+            parent[i] = i;
+        }
+    }
+
+    int find(int x) {
+        if (parent[x] == x) {
+            return x;
+        }
+        return parent[x] = find(parent[x]);
+    }
+
+    // vector<int> parent; // 记录节点的根，当前节点的大哥
+    // vector<int> rank;   // 记录根节点的深度（用于优化），即大哥是n的个数
+    // vector<int> size;   // 记录每个连通分量的节点个数，已加入并查集的个数
+    // vector<int> len;    // 记录每个联通分量里的所有边长度，最终返回的长度
+    // int num;            // 记录节点个数，总个数
+    int merge(int x, int y, int lengh) {
+        // 分别找到并查集两个端点中的老大
+        int rootx = find(x);
+        int rooty = find(y);
+        if (rootx != rooty) {
+            // 保证rootx的深度小于rooty，则将rootx与rooty互换
+            if (rank[rootx] < rank[rooty]) {
+                swap(rootx, rooty);
+            }
+            parent[rooty] = rootx;
+            if (rank[rootx] == rank[rooty]) {
+                rank[rootx] += 1;
+            }
+            // rooty节点的根是rootx，同时将rooty的节点树和边长度累加到rootx
+            size[rootx] += size[rooty];
+            len[rootx] += len[rooty] + lengh;
+            // 如果某个连通分量的节点数，包含了所有节点，直接返回边长度
+            if (size[rootx] == num) {
+                return len[rootx];
+            }
+        }
+        return -1;
+    }
+};
+
+struct Edge {
+    int start;
+    int end;
+    int len;
+};
+
+class Solution {
+public:
+    int minCostConnectPoints(vector<vector<int>>& points) {
+        int res = 0;
+        int n = points.size();
+        Djset ds(n);
+        vector<Edge> edges;
+
+        // 建立点边数据结构
+        for (int i = 0; i < n; i++) {
+            for (int j = i + 1; j < n; j++) {
+                Edge edge = {i, j,
+                             abs(points[i][0] - points[j][0]) +
+                                 abs(points[i][1] - points[j][1])};
+                edges.emplace_back(edge);
+            }
+        }
+
+        // 按边长度排序
+        sort(edges.begin(), edges.end(),
+             [](const auto& a, const auto& b) { return a.len < b.len; });
+
+        // 连通分量合并
+        for (auto& e : edges) {
+            // 将边按距离从小到大一次放入并查集中
+            res = ds.merge(e.start, e.end, e.len);
+            if (res != -1) {
+                return res;
+            }
+        }
+        return 0;
+    }
+};
+```
+
+
 
 
 
