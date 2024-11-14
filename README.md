@@ -1984,6 +1984,36 @@ private static void recursion(int n, LinkedList<Integer> a,
 }
 ```
 
+### 10.3 卡特兰数
+
+#### 1 不同的二叉搜索树
+
+给你一个整数 `n` ，求恰由 `n` 个节点组成且节点值从 `1` 到 `n` 互不相同的 **二叉搜索树** 有多少种？返回满足题意的二叉搜索树的种数
+
+```cpp
+class Solution {
+public:
+    int numTrees(int n) {
+        vector<int> dp(n + 1,0);
+        dp[0] = 1;
+        for(int i = 1;i <= n;i++) {
+            for (int j = 0; j < i;j++) {
+                dp[i] += dp[j] * dp[i - 1 - j];
+            }
+        }
+        return dp[n];
+    }
+};
+```
+
+#### 2 出栈序列
+
+n个元素进栈序列序列为：1，2，3，4，5，6...n，则有多少个出栈序列
+
+
+
+
+
 ## 十一、递归
 
 在函数最后一步是调用一个函数，那么称之为尾调用
@@ -2017,3 +2047,4 @@ T(n)=16T(n/4)+n2
 
 - a=16,b=4,x=2,c=2
 - 此时 x=2=c，时间复杂度 Θ(n2log⁡n)
+
