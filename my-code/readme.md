@@ -200,3 +200,35 @@ class Solution {
 
 ## 三、Divide and Conquer
 
+
+
+## 四、TWO POINTER
+
+### 4.1 Longest Substring Without Repeating Characters
+
+ [Longest Substring Without Repeating Characters](https://leetcode.cn/problems/longest-substring-without-repeating-characters/)
+
+```js
+/**
+ * @param {string} s
+ * @return {number}
+ */
+var lengthOfLongestSubstring = function (s) {
+    const set = new Set();
+    const n = s.length;
+    let right = -1;
+    let ans = 0;
+    for (let left = 0; left < s.length; left++) {
+        if (left != 0) {
+            set.delete(s.charAt(left - 1));
+        }
+        while (right + 1 < n && !set.has(s.charAt(right + 1))) {
+            set.add(s.charAt(right + 1));
+            right++;
+        }
+        ans = Math.max(ans, right - left + 1);
+    }
+    return ans;
+};
+```
+
